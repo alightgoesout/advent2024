@@ -3,6 +3,7 @@ use std::env;
 use std::time::Instant;
 
 mod day1;
+mod day2;
 mod input;
 
 pub trait Solution {
@@ -25,19 +26,29 @@ pub trait Solution {
 }
 
 pub fn solutions() -> HashMap<u8, Box<dyn Solution>> {
-    [Box::new(day1::Day1::default()) as Box<dyn Solution>]
-        .into_iter()
-        .map(|solution| (solution.day(), solution))
-        .collect()
+    [
+        Box::new(day1::Day1::default()) as Box<dyn Solution>,
+        Box::new(day2::Day2::default()),
+    ]
+    .into_iter()
+    .map(|solution| (solution.day(), solution))
+    .collect()
 }
 
-fn read_day_from_args() -> Option<u8> {
-    env::args().nth(1).and_then(|arg| arg.parse().ok())
+fn read_day_from_args() -> u8 {
+    env::args()
+        .nth(1)
+        .map(|arg| arg.parse())
+        .expect("Missing day argument")
+        .expect("Invalid day")
 }
 
 fn main() {
     let solutions = solutions();
-    if let Some(solution) = read_day_from_args().and_then(|day| solutions.get(&day)) {
+    let day = read_day_from_args();
+    if let Some(solution) = solutions.get(&day) {
         solution.execute()
+    } else {
+        println!("Unknown day {day}")
     }
 }

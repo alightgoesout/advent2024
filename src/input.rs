@@ -45,8 +45,5 @@ impl<I: Iterator> ParseExt<I> for I {
 
 pub fn read_lines<R: Read>(reader: R) -> impl Iterator<Item = String> {
     let buf_reader = BufReader::new(reader);
-    buf_reader
-        .lines()
-        .filter(Result::is_ok)
-        .map(|line| line.unwrap())
+    buf_reader.lines().map_while(Result::ok)
 }
