@@ -1,10 +1,9 @@
+use crate::input::{FilterNotEmpty, ParseExt, ReadLines};
+use crate::{Error, Result, Solution};
 use itertools::Itertools;
-use std::cell::OnceCell;
+use once_cell::unsync::OnceCell;
 use std::cmp::Ordering;
 use std::str::FromStr;
-
-use crate::input::{read_lines, FilterNotEmpty, ParseExt};
-use crate::Solution;
 
 mod input;
 
@@ -12,13 +11,8 @@ mod input;
 pub struct Day2(OnceCell<Vec<Report>>);
 
 impl Day2 {
-    fn reports(&self) -> &[Report] {
-        self.0.get_or_init(|| {
-            read_lines(input::INPUT)
-                .filter_not_empty()
-                .parse()
-                .collect()
-        })
+    fn reports(&self) -> Result<&[Report]> {
+        Ok(self.0.get_or_try_init(|| parse_reports(input::INPUT))?)
     }
 }
 
@@ -27,24 +21,24 @@ impl Solution for Day2 {
         2
     }
 
-    fn part_one(&self) -> String {
+    fn part_one(&self) -> Result<String> {
         let nb_safe_reports = self
-            .reports()
+            .reports()?
             .iter()
             .filter(|report| report.is_safe())
             .count();
-        format!("Number of safe reports: {nb_safe_reports}")
+        Ok(format!("Number of safe reports: {nb_safe_reports}"))
     }
 
-    fn part_two(&self) -> String {
+    fn part_two(&self) -> Result<String> {
         let nb_safe_reports_with_problem_dampener = self
-            .reports()
+            .reports()?
             .iter()
             .filter(|report| report.is_safe_with_problem_dampener())
             .count();
-        format!(
+        Ok(format!(
             "Number of safe reports with problem dampener: {nb_safe_reports_with_problem_dampener}"
-        )
+        ))
     }
 }
 
@@ -53,9 +47,9 @@ struct Report {
 }
 
 impl FromStr for Report {
-    type Err = String;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let levels = s.split(' ').map(|s| s.parse().unwrap()).collect();
         Ok(Report { levels })
     }
@@ -78,6 +72,10 @@ impl Report {
             ProblemDampenerIterator::new(self.levels.clone()).any(|sequence| is_safe(&sequence))
         }
     }
+}
+
+fn parse_reports(input: &[u8]) -> Result<Vec<Report>> {
+    input.read_lines().filter_not_empty().parse().collect()
 }
 
 fn is_safe(levels: &[u32]) -> bool {
@@ -156,7 +154,7 @@ mod test {
 
     #[test]
     fn full_example_is_safe() {
-        let reports: Vec<Report> = read_lines(EXAMPLE).filter_not_empty().parse().collect();
+        let reports = parse_reports(EXAMPLE).unwrap();
 
         let result: Vec<_> = reports.iter().map(Report::is_safe).collect();
 
@@ -165,7 +163,7 @@ mod test {
 
     #[test]
     fn full_example_is_safe_with_problem_dampener() {
-        let reports: Vec<Report> = read_lines(EXAMPLE).filter_not_empty().parse().collect();
+        let reports = parse_reports(EXAMPLE).unwrap();
 
         let result: Vec<_> = reports
             .iter()

@@ -1,8 +1,9 @@
-use std::fmt::Debug;
 use std::io::{BufRead, BufReader, Read};
-use std::iter::Filter;
+use std::iter::{Filter, MapWhile};
 use std::marker::PhantomData;
 use std::str::FromStr;
+
+use crate::Error;
 
 pub trait FilterNotEmpty: Iterator + Sized {
     fn filter_not_empty(self) -> Filter<Self, fn(&String) -> bool>;
@@ -24,12 +25,14 @@ where
     I: Iterator<Item = U>,
     U: ToString,
     T: FromStr,
-    T::Err: Debug,
+    T::Err: Into<Error>,
 {
-    type Item = T;
+    type Item = Result<T, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|item| item.to_string().parse().unwrap())
+        self.0
+            .next()
+            .map(|item| item.to_string().parse().map_err(Into::into))
     }
 }
 
@@ -43,7 +46,19 @@ impl<I: Iterator> ParseExt<I> for I {
     }
 }
 
-pub fn read_lines<R: Read>(reader: R) -> impl Iterator<Item = String> {
-    let buf_reader = BufReader::new(reader);
-    buf_reader.lines().map_while(Result::ok)
+pub trait ReadLines {
+    type Iterator: Iterator<Item = String>;
+
+    fn read_lines(self) -> Self::Iterator;
+}
+
+impl<R: Read> ReadLines for R {
+    type Iterator = MapWhile<
+        std::io::Lines<BufReader<R>>,
+        fn(Result<String, std::io::Error>) -> Option<String>,
+    >;
+
+    fn read_lines(self) -> Self::Iterator {
+        BufReader::new(self).lines().map_while(Result::ok)
+    }
 }

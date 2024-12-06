@@ -2,7 +2,7 @@ use regex::Regex;
 use std::cell::OnceCell;
 use std::sync::OnceLock;
 
-use crate::Solution;
+use crate::{Result, Solution};
 
 mod input;
 
@@ -20,7 +20,7 @@ impl Solution for Day3 {
         3
     }
 
-    fn part_one(&self) -> String {
+    fn part_one(&self) -> Result<String> {
         let sum_of_multiplications = (&self.program().0)
             .iter()
             .filter_map(|instruction| {
@@ -32,12 +32,12 @@ impl Solution for Day3 {
             })
             .map(Multiplication::compute)
             .sum::<u32>();
-        format!("Sum of multiplications : {sum_of_multiplications}")
+        Ok(format!("Sum of multiplications : {sum_of_multiplications}"))
     }
 
-    fn part_two(&self) -> String {
+    fn part_two(&self) -> Result<String> {
         let result = self.program().execute();
-        format!("Sum wih only enabled multiplications: {result}")
+        Ok(format!("Sum wih only enabled multiplications: {result}"))
     }
 }
 

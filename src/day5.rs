@@ -1,12 +1,12 @@
 use itertools::Itertools;
-use std::cell::OnceCell;
+use once_cell::unsync::OnceCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Index;
 use std::str::FromStr;
 
-use crate::input::{read_lines, ParseExt};
-use crate::{error, Error, Solution};
+use crate::input::{ParseExt, ReadLines};
+use crate::{error, Error, Result, Solution};
 
 mod input;
 
@@ -17,14 +17,16 @@ pub struct Day5 {
 }
 
 impl Day5 {
-    fn page_orderings(&self) -> &PageOrderings {
-        self.page_orderings
-            .get_or_init(|| read_lines(input::PAGE_ORDERINGS).parse().into())
+    fn page_orderings(&self) -> Result<&PageOrderings> {
+        self.page_orderings.get_or_try_init(|| {
+            PageOrderings::from_page_orderings(input::PAGE_ORDERINGS.read_lines().parse())
+        })
     }
 
-    fn updates(&self) -> &[Update] {
+    fn updates(&self) -> Result<&[Update]> {
         self.updates
-            .get_or_init(|| read_lines(input::UPDATES).parse().collect())
+            .get_or_try_init(|| input::UPDATES.read_lines().parse().collect())
+            .map(Vec::as_slice)
     }
 }
 
@@ -33,16 +35,20 @@ impl Solution for Day5 {
         5
     }
 
-    fn part_one(&self) -> String {
+    fn part_one(&self) -> Result<String> {
         let sum_of_middle_page_of_valid_updates =
-            sum_of_middle_page_of_valid_updates(self.updates(), self.page_orderings());
-        format!("Sum of middle pages of valid updates: {sum_of_middle_page_of_valid_updates}")
+            sum_of_middle_page_of_valid_updates(self.updates()?, self.page_orderings()?);
+        Ok(format!(
+            "Sum of middle pages of valid updates: {sum_of_middle_page_of_valid_updates}"
+        ))
     }
 
-    fn part_two(&self) -> String {
+    fn part_two(&self) -> Result<String> {
         let sum_of_middle_page_of_fixed_updates =
-            sum_of_middle_page_of_fixed_updates(self.updates(), self.page_orderings());
-        format!("Sum of middle pages of fixed updates: {sum_of_middle_page_of_fixed_updates}")
+            sum_of_middle_page_of_fixed_updates(self.updates()?, self.page_orderings()?);
+        Ok(format!(
+            "Sum of middle pages of fixed updates: {sum_of_middle_page_of_fixed_updates}"
+        ))
     }
 }
 
@@ -66,6 +72,21 @@ fn sum_of_middle_page_of_fixed_updates(updates: &[Update], page_orderings: &Page
 struct PageOrderings(HashMap<u32, Vec<u32>>);
 
 impl PageOrderings {
+    fn from_page_orderings<I>(page_orderings: I) -> Result<PageOrderings>
+    where
+        I: IntoIterator<Item = Result<PageOrdering>>,
+    {
+        Ok(PageOrderings(
+            page_orderings
+                .into_iter()
+                .collect::<Result<Vec<_>>>()?
+                .into_iter()
+                .map(|page_ordering| (page_ordering.0, page_ordering.1))
+                .into_grouping_map()
+                .collect(),
+        ))
+    }
+
     fn compare(&self, a: &u32, b: &u32) -> Ordering {
         if let Some(pages_after) = self.0.get(a) {
             if pages_after.contains(b) {
@@ -78,21 +99,6 @@ impl PageOrderings {
             }
         }
         Ordering::Equal
-    }
-}
-
-impl<I> From<I> for PageOrderings
-where
-    I: IntoIterator<Item = PageOrdering>,
-{
-    fn from(value: I) -> Self {
-        PageOrderings(
-            value
-                .into_iter()
-                .map(|page_ordering| (page_ordering.0, page_ordering.1))
-                .into_grouping_map()
-                .collect(),
-        )
     }
 }
 
@@ -109,7 +115,7 @@ struct PageOrdering(u32, u32);
 impl FromStr for PageOrdering {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         s.split_once('|')
             .ok_or_else(|| error!("Invalid page ordering: {s}"))
             .and_then(|(a, b)| Ok(PageOrdering(a.parse()?, b.parse()?)))
@@ -121,11 +127,11 @@ struct Update(Vec<u32>);
 impl FromStr for Update {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let pages = s
             .split(',')
-            .map(str::parse)
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|p| Ok(p.parse()?))
+            .collect::<Result<Vec<_>>>()?;
         Ok(Self(pages))
     }
 }
@@ -156,13 +162,10 @@ impl Update {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::sync::OnceLock;
 
-    fn example_page_orderings() -> &'static PageOrderings {
-        static EXAMPLE_PAGE_ORDERINGS: OnceLock<PageOrderings> = OnceLock::new();
-        EXAMPLE_PAGE_ORDERINGS.get_or_init(|| {
-            read_lines(
-                b"\
+    fn example_page_orderings() -> PageOrderings {
+        PageOrderings::from_page_orderings(
+            b"\
 47|53
 97|13
 97|61
@@ -184,49 +187,46 @@ mod test {
 47|29
 75|13
 53|13"
-                    .as_slice(),
-            )
-            .parse()
-            .into()
-        })
+                .as_slice()
+                .read_lines()
+                .parse(),
+        )
+        .unwrap()
     }
 
-    fn example_updates() -> &'static [Update] {
-        static EXAMPLE_UPDATES: OnceLock<Vec<Update>> = OnceLock::new();
-        EXAMPLE_UPDATES.get_or_init(|| {
-            read_lines(
-                b"\
+    fn example_updates() -> Vec<Update> {
+        b"\
 75,47,61,53,29
 97,61,53,29,13
 75,29,13
 75,97,47,61,53
 61,13,29
 97,13,75,29,47"
-                    .as_slice(),
-            )
+            .as_slice()
+            .read_lines()
             .parse()
-            .collect()
-        })
+            .collect::<Result<_>>()
+            .unwrap()
     }
 
     #[test]
     fn is_valid_should_return_true_when_update_order_is_correct() {
         let update = Update(vec![75, 47, 61, 53, 29]);
 
-        assert!(update.is_valid(example_page_orderings()));
+        assert!(update.is_valid(&example_page_orderings()));
     }
 
     #[test]
     fn is_valid_should_return_false_when_pages_appear_in_the_wrong_order() {
         let update = Update(vec![75, 97, 47, 61, 53]);
 
-        assert!(!update.is_valid(example_page_orderings()));
+        assert!(!update.is_valid(&example_page_orderings()));
     }
 
     #[test]
     fn sum_of_middle_page_of_valid_updates_example() {
         let result =
-            sum_of_middle_page_of_valid_updates(example_updates(), example_page_orderings());
+            sum_of_middle_page_of_valid_updates(&example_updates(), &example_page_orderings());
 
         assert_eq!(result, 143);
     }
@@ -235,7 +235,7 @@ mod test {
     fn fix_order_example() {
         let update = Update(vec![75, 97, 47, 61, 53]);
 
-        let result = update.fix_order(example_page_orderings());
+        let result = update.fix_order(&example_page_orderings());
 
         assert_eq!(result.0, vec![97, 75, 47, 61, 53])
     }
@@ -243,7 +243,7 @@ mod test {
     #[test]
     fn sum_of_middle_page_of_fixed_updates_example() {
         let result =
-            sum_of_middle_page_of_fixed_updates(example_updates(), example_page_orderings());
+            sum_of_middle_page_of_fixed_updates(&example_updates(), &example_page_orderings());
 
         assert_eq!(result, 123);
     }

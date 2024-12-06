@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::Solution;
+use crate::{Result, Solution};
 
 mod input;
 
@@ -11,16 +11,16 @@ impl Solution for Day4 {
         4
     }
 
-    fn part_one(&self) -> String {
+    fn part_one(&self) -> Result<String> {
         let word_search = WordSearch(input::INPUT);
         let number_of_xmas = word_search.count_word(b"XMAS");
-        format!("Number of XMAS: {number_of_xmas}")
+        Ok(format!("Number of XMAS: {number_of_xmas}"))
     }
 
-    fn part_two(&self) -> String {
+    fn part_two(&self) -> Result<String> {
         let word_search = WordSearch(input::INPUT);
         let number_of_x_mas = word_search.count_x_mas();
-        format!("Number of X-MAS: {number_of_x_mas}")
+        Ok(format!("Number of X-MAS: {number_of_x_mas}"))
     }
 }
 

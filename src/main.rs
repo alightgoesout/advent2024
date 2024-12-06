@@ -14,7 +14,7 @@ fn main() {
     let solutions = solutions();
     let day = read_day_from_args();
     if let Some(solution) = solutions.get(&day) {
-        solution.execute()
+        solution.execute().unwrap()
     } else {
         println!("Unknown day {day}")
     }
