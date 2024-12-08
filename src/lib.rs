@@ -7,6 +7,7 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
+mod day8;
 mod error;
 mod input;
 mod solution;
@@ -24,6 +25,7 @@ pub fn solutions() -> HashMap<u8, Box<dyn Solution>> {
         Box::new(day5::Day5::default()),
         Box::new(day6::Day6::default()),
         Box::new(day7::Day7::default()),
+        Box::new(day8::Day8::default()),
     ]
     .into_iter()
     .map(|solution| (solution.day(), solution))
