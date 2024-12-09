@@ -31,10 +31,6 @@ impl Day5 {
 }
 
 impl Solution for Day5 {
-    fn day(&self) -> u8 {
-        5
-    }
-
     fn part_one(&self) -> Result<String> {
         let sum_of_middle_page_of_valid_updates =
             sum_of_middle_page_of_valid_updates(self.updates()?, self.page_orderings()?);

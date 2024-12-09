@@ -2,7 +2,7 @@ use std::env;
 
 use advent2024::solutions;
 
-fn read_day_from_args() -> u8 {
+fn read_day_from_args() -> usize {
     env::args()
         .nth(1)
         .map(|arg| arg.parse())
@@ -13,8 +13,8 @@ fn read_day_from_args() -> u8 {
 fn main() {
     let solutions = solutions();
     let day = read_day_from_args();
-    if let Some(solution) = solutions.get(&day) {
-        solution.execute().unwrap()
+    if let Some(solution) = solutions.get(day - 1) {
+        solution.execute(day as u8).unwrap()
     } else {
         println!("Unknown day {day}")
     }

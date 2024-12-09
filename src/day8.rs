@@ -17,10 +17,6 @@ impl Day8 {
 }
 
 impl Solution for Day8 {
-    fn day(&self) -> u8 {
-        8
-    }
-
     fn part_one(&self) -> Result<String> {
         let nb_antinodes = self.antenna_map()?.get_all_antinodes().len();
         Ok(format!("Number of antinodes: {nb_antinodes}"))

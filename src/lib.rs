@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 mod day1;
 mod day2;
 mod day3;
@@ -16,8 +14,8 @@ pub use error::Error;
 pub use solution::Solution;
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub fn solutions() -> HashMap<u8, Box<dyn Solution>> {
-    [
+pub fn solutions() -> Vec<Box<dyn Solution>> {
+    vec![
         Box::new(day1::Day1::default()) as Box<dyn Solution>,
         Box::new(day2::Day2::default()),
         Box::new(day3::Day3::default()),
@@ -27,9 +25,6 @@ pub fn solutions() -> HashMap<u8, Box<dyn Solution>> {
         Box::new(day7::Day7::default()),
         Box::new(day8::Day8::default()),
     ]
-    .into_iter()
-    .map(|solution| (solution.day(), solution))
-    .collect()
 }
 
 #[macro_export]

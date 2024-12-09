@@ -3,12 +3,10 @@ use std::time::Instant;
 use crate::Result;
 
 pub trait Solution {
-    fn day(&self) -> u8;
     fn part_one(&self) -> Result<String>;
     fn part_two(&self) -> Result<String>;
 
-    fn execute(&self) -> Result<()> {
-        let day = self.day();
+    fn execute(&self, day: u8) -> Result<()> {
         let start = Instant::now();
         println!("{day}:1 — {}", self.part_one()?);
         let part1_duration = start.elapsed();

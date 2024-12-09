@@ -17,10 +17,6 @@ impl Day2 {
 }
 
 impl Solution for Day2 {
-    fn day(&self) -> u8 {
-        2
-    }
-
     fn part_one(&self) -> Result<String> {
         let nb_safe_reports = self
             .reports()?

@@ -18,10 +18,6 @@ impl Day7 {
 }
 
 impl Solution for Day7 {
-    fn day(&self) -> u8 {
-        7
-    }
-
     fn part_one(&self) -> Result<String> {
         let sum_of_test_values: u64 = self
             .equations()?

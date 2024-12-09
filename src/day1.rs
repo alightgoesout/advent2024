@@ -18,10 +18,6 @@ impl Day1 {
 }
 
 impl Solution for Day1 {
-    fn day(&self) -> u8 {
-        1
-    }
-
     fn part_one(&self) -> Result<String> {
         let (first_items, second_items) = self.items()?;
         let sum_distances: u32 = distances(first_items, second_items).sum();

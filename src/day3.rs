@@ -16,10 +16,6 @@ impl Day3 {
 }
 
 impl Solution for Day3 {
-    fn day(&self) -> u8 {
-        3
-    }
-
     fn part_one(&self) -> Result<String> {
         let sum_of_multiplications = (&self.program().0)
             .iter()

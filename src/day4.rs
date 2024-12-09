@@ -7,10 +7,6 @@ mod input;
 pub struct Day4;
 
 impl Solution for Day4 {
-    fn day(&self) -> u8 {
-        4
-    }
-
     fn part_one(&self) -> Result<String> {
         let word_search = WordSearch(input::INPUT);
         let number_of_xmas = word_search.count_word(b"XMAS");

@@ -16,10 +16,6 @@ impl Day6 {
 }
 
 impl Solution for Day6 {
-    fn day(&self) -> u8 {
-        6
-    }
-
     fn part_one(&self) -> Result<String> {
         let guard_path = self.mapped_area()?.clone().guard_path();
         Ok(format!("Length of guard path: {}", guard_path.len()))
